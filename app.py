@@ -104,7 +104,8 @@ if uploaded_file is not None:
         
         # Show a quick preview on the website
         st.subheader("Preview: Regional Pivot")
-        st.dataframe(summary_table_region.head())
+        # st.dataframe(summary_table_region.head())
+        st.dataframe(summary_table_region)
         
         # Convert dataframes to CSVs in memory for downloading
         region_csv = summary_table_region.to_csv().encode('utf-8')
