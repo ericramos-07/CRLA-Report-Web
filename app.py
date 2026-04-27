@@ -110,7 +110,7 @@ if uploaded_file is not None:
         
         with col1:
             st.download_button(
-                label="Download Regional Pivot CSV",
+                label="Download Region-Pivot CSV",
                 data=region_csv,
                 file_name=f'CRLA_{term_name}_Regional_Pivot.csv',
                 mime='text/csv',
@@ -119,7 +119,7 @@ if uploaded_file is not None:
             
         with col2:
             st.download_button(
-                label="Download Divisional Pivot CSV",
+                label="Download Division-Pivot CSV",
                 data=division_csv,
                 file_name=f'CRLA_{term_name}_Division_Pivot.csv',
                 mime='text/csv',
