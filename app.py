@@ -117,7 +117,7 @@ if uploaded_file is not None:
             )
         with col2:
             st.download_button(
-                label="Download Division Pivot CSV",
+                label="Download Divisional Pivot CSV",
                 data=division_csv,
                 file_name=f'CRLA_{term_name}_Division_Pivot.csv',
                 mime='text/csv',
