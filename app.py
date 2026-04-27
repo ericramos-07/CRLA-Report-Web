@@ -105,13 +105,7 @@ if uploaded_file is not None:
         # Convert dataframes to CSVs in memory for downloading
         region_csv = summary_table_region.to_csv().encode('utf-8')
         division_csv = summary_table_division.to_csv().encode('utf-8')
-        
-        # Show a quick preview on the website
-        st.subheader("Preview: Regional Pivot")
-        # st.dataframe(summary_table_region.head())
-        st.dataframe(summary_table_region)
-        st.dataframe(summary_table_division)
-        
+
         # Provide download buttons
         col1, col2 = st.columns(2)
         with col1:
@@ -128,6 +122,12 @@ if uploaded_file is not None:
                 file_name=f'CRLA_{term_name}_Division_Pivot.csv',
                 mime='text/csv',
             )
+        
+        # Show a quick preview on the website
+        st.subheader("Preview: Regional Pivot")
+        # st.dataframe(summary_table_region.head())
+        st.dataframe(summary_table_region)
+        st.dataframe(summary_table_division)
             
     except Exception as e:
         # If any other error happens, show it nicely on the website instead of a red crash box
