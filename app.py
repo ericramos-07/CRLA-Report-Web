@@ -127,6 +127,7 @@ if uploaded_file is not None:
         st.subheader("Preview: Regional Pivot")
         # st.dataframe(summary_table_region.head())
         st.dataframe(summary_table_region)
+        st.subheader("Preview: Divisional Pivot")
         st.dataframe(summary_table_division)
             
     except Exception as e:
