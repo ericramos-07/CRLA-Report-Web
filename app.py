@@ -106,22 +106,42 @@ if uploaded_file is not None:
         region_csv = summary_table_region.to_csv().encode('utf-8')
         division_csv = summary_table_division.to_csv().encode('utf-8')
 
-        # Provide download buttons
-        col1, col2 = st.columns(2)
+        spacer1, col1, col2, spacer2 = st.columns([1, 2, 2, 1])
+        
         with col1:
             st.download_button(
                 label="Download Regional Pivot CSV",
                 data=region_csv,
                 file_name=f'CRLA_{term_name}_Regional_Pivot.csv',
                 mime='text/csv',
+                use_container_width=True
             )
+            
         with col2:
             st.download_button(
                 label="Download Divisional Pivot CSV",
                 data=division_csv,
                 file_name=f'CRLA_{term_name}_Division_Pivot.csv',
                 mime='text/csv',
+                use_container_width=True
             )
+
+        # # Provide download buttons
+        # col1, col2 = st.columns(2)
+        # with col1:
+        #     st.download_button(
+        #         label="Download Regional Pivot CSV",
+        #         data=region_csv,
+        #         file_name=f'CRLA_{term_name}_Regional_Pivot.csv',
+        #         mime='text/csv',
+        #     )
+        # with col2:
+        #     st.download_button(
+        #         label="Download Divisional Pivot CSV",
+        #         data=division_csv,
+        #         file_name=f'CRLA_{term_name}_Division_Pivot.csv',
+        #         mime='text/csv',
+        #     )
         
         # Show a quick preview on the website
         st.subheader("Preview: Regional Pivot")
