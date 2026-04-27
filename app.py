@@ -101,15 +101,16 @@ if uploaded_file is not None:
         summary_table_division = process_crla(raw_data, 'Division')
         
         st.success("Success! Your reports have been created.")
+
+        # Convert dataframes to CSVs in memory for downloading
+        region_csv = summary_table_region.to_csv().encode('utf-8')
+        division_csv = summary_table_division.to_csv().encode('utf-8')
         
         # Show a quick preview on the website
         st.subheader("Preview: Regional Pivot")
         # st.dataframe(summary_table_region.head())
         st.dataframe(summary_table_region)
-        
-        # Convert dataframes to CSVs in memory for downloading
-        region_csv = summary_table_region.to_csv().encode('utf-8')
-        division_csv = summary_table_division.to_csv().encode('utf-8')
+        st.dataframe(summary_table_division)
         
         # Provide download buttons
         col1, col2 = st.columns(2)
