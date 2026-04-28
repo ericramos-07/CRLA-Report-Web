@@ -311,7 +311,7 @@ else:
 report_prefix = f"{assessment_name}_{term_choice}"
 
 # -----------------------------
-st.info(f"💡 **Quick Reminder:** Please make sure the CSV you upload exactly matches your selection above (**{assessment_choice} - {term_choice}**) to prevent processing errors.")
+st.info(f"💡 **Reminder:** Please make sure the CSV you upload exactly matches your selection above (**{assessment_choice} - {term_choice}**) to prevent processing errors.")
 # -----------------------------
 
 # Web File Uploader dynamically updates its label
