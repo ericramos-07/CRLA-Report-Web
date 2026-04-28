@@ -292,7 +292,11 @@ def process_philiri_ks3_eosy(df, group_column):
 
 st.title("DepEd Automated Report Generator ARAL SY25-26")
 
-# Interactive selections replacing the command-line inputs
+# Set up a "Session State" memory key to allow us to reset the file uploader
+if 'uploader_key' not in st.session_state:
+    st.session_state.uploader_key = str(0)
+
+# Interactive selections
 assessment_choice = st.selectbox(
     "Which assessment are you processing?",
     ("CRLA (Grades 1-3)", "Phil-IRI KS2 (Grades 4-6)", "Phil-IRI KS3 (Grades 7-10)")
@@ -314,38 +318,45 @@ report_prefix = f"{assessment_name}_{term_choice}"
 st.info(f"💡 **Reminder:** Please make sure the CSV you upload exactly matches your selection above (**{assessment_choice} - {term_choice}**) to prevent processing errors.")
 # -----------------------------
 
-# Web File Uploader dynamically updates its label
-uploaded_file = st.file_uploader(f"Upload your {report_prefix} CSV", type=["csv"])
+# Web File Uploader tied to our session state key
+uploaded_file = st.file_uploader(f"Upload your {report_prefix} CSV", type=["csv"], key=st.session_state.uploader_key)
 
 if uploaded_file is not None:
     try:
-        st.info("Processing data... Please wait.")
-        
-        # Read the data
-        raw_data = pd.read_csv(uploaded_file)
-        
-        # Route the data to the correct processor based on user choices
-        if assessment_name == 'CRLA':
-            summary_table_region = process_crla(raw_data, 'Region')
-            summary_table_division = process_crla(raw_data, 'Division')
+        # TWEAK 1: This creates a spinning wheel that automatically disappears when the code finishes!
+        with st.spinner("Processing data... Please wait."):
             
-        elif assessment_name == 'PhilIRI_KS2':
-            if term_choice == 'BoSY':
-                summary_table_region = process_philiri_ks2_bosy(raw_data, 'Region')
-                summary_table_division = process_philiri_ks2_bosy(raw_data, 'Division')
-            elif term_choice == 'EoSY':
-                summary_table_region = process_philiri_ks2_eosy(raw_data, 'Region')
-                summary_table_division = process_philiri_ks2_eosy(raw_data, 'Division')
+            # Read the data
+            raw_data = pd.read_csv(uploaded_file)
+            
+            # Route the data to the correct processor based on user choices
+            if assessment_name == 'CRLA':
+                summary_table_region = process_crla(raw_data, 'Region')
+                summary_table_division = process_crla(raw_data, 'Division')
                 
-        elif assessment_name == 'PhilIRI_KS3':
-            if term_choice == 'BoSY':
-                summary_table_region = process_philiri_ks3_bosy(raw_data, 'Region')
-                summary_table_division = process_philiri_ks3_bosy(raw_data, 'Division')
-            elif term_choice == 'EoSY':
-                summary_table_region = process_philiri_ks3_eosy(raw_data, 'Region')
-                summary_table_division = process_philiri_ks3_eosy(raw_data, 'Division')
-        
+            elif assessment_name == 'PhilIRI_KS2':
+                if term_choice == 'BoSY':
+                    summary_table_region = process_philiri_ks2_bosy(raw_data, 'Region')
+                    summary_table_division = process_philiri_ks2_bosy(raw_data, 'Division')
+                elif term_choice == 'EoSY':
+                    summary_table_region = process_philiri_ks2_eosy(raw_data, 'Region')
+                    summary_table_division = process_philiri_ks2_eosy(raw_data, 'Division')
+                    
+            elif assessment_name == 'PhilIRI_KS3':
+                if term_choice == 'BoSY':
+                    summary_table_region = process_philiri_ks3_bosy(raw_data, 'Region')
+                    summary_table_division = process_philiri_ks3_bosy(raw_data, 'Division')
+                elif term_choice == 'EoSY':
+                    summary_table_region = process_philiri_ks3_eosy(raw_data, 'Region')
+                    summary_table_division = process_philiri_ks3_eosy(raw_data, 'Division')
+            
         st.success("Success! Your reports have been created.")
+
+        # TWEAK 3: The Reset Button
+        # If clicked, it changes the memory key, which forces the uploader to go blank and start over.
+        if st.button("🔄 Reset / Start Over"):
+            st.session_state.uploader_key = str(int(st.session_state.uploader_key) + 1)
+            st.rerun()
 
         # Convert dataframes to CSVs in memory
         region_csv = summary_table_region.to_csv().encode('utf-8')
@@ -381,3 +392,8 @@ if uploaded_file is not None:
     except Exception as e:
         st.error(f"Data Processing Error: {e}")
         st.write("Please check your CSV file to ensure it matches the chosen assessment format.")
+        
+        # Give them a reset button here too, just in case they trigger an error!
+        if st.button("🔄 Try Again"):
+            st.session_state.uploader_key = str(int(st.session_state.uploader_key) + 1)
+            st.rerun()
