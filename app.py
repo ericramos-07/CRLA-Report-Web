@@ -354,9 +354,12 @@ if uploaded_file is not None:
 
         # TWEAK 3: The Reset Button
         # If clicked, it changes the memory key, which forces the uploader to go blank and start over.
-        if st.button("🔄 Reset / Start Over"):
-            st.session_state.uploader_key = str(int(st.session_state.uploader_key) + 1)
-            st.rerun()
+        spacer_left, center_col, spacer_right = st.columns([1, 2, 1])
+        
+        with center_col:
+            if st.button("🔄 Reset / Start Over", use_container_width=True):
+                st.session_state.uploader_key = str(int(st.session_state.uploader_key) + 1)
+                st.rerun()
 
         # Convert dataframes to CSVs in memory
         region_csv = summary_table_region.to_csv().encode('utf-8')
