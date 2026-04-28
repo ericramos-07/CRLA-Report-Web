@@ -290,7 +290,7 @@ def process_philiri_ks3_eosy(df, group_column):
 # 3. INTERACTIVE WEB WORKFLOW
 # ==========================================
 
-st.title("DepEd Automated Report Generator SY25-26")
+st.title("DepEd Automated Report Generator ARAL SY25-26")
 
 # Interactive selections replacing the command-line inputs
 assessment_choice = st.selectbox(
