@@ -17,6 +17,7 @@ def calculate_percentage(df, part_col, total_col):
 # 2. SPECIFIC ASSESSMENT PROCESSORS
 # ==========================================
 
+# --- CRLA ---
 def process_crla(df, group_column):
     df.columns = df.columns.str.strip()
     
@@ -71,6 +72,7 @@ def process_crla(df, group_column):
     final_layout = [col for col in ideal_final_layout if col in grouped.columns]
     return grouped[final_layout]
 
+# --- PHIL-IRI KS2 ---
 def process_philiri_ks2_bosy(df, group_column):
     df.columns = df.columns.str.strip()
     ideal_columns_to_sum = [
@@ -168,6 +170,7 @@ def process_philiri_ks2_eosy(df, group_column):
     final_layout = [col for col in ideal_final_layout if col in grouped.columns]
     return grouped[final_layout]
 
+# --- PHIL-IRI KS3 ---
 def process_philiri_ks3_bosy(df, group_column):
     df.columns = df.columns.str.strip()
     ideal_columns_to_sum = [
@@ -249,7 +252,6 @@ def process_philiri_ks3_eosy(df, group_column):
     grouped = df.groupby(group_column)[columns_to_sum].sum()
     
     # Calculate Total Eng Assessed (since it wasn't in the raw columns but needed for % base)
-    # Using .get() ensures it won't crash if a column happens to be missing
     grouped['Total Eng Assessed'] = grouped.get('G7 Eng Assessed', 0) + grouped.get('G8 Eng Assessed', 0) + grouped.get('G9 Eng Assessed', 0) + grouped.get('G10 Eng Assessed', 0)
     
     grouped['total_schools'] = df.groupby(group_column)['School ID'].nunique()
@@ -286,6 +288,174 @@ def process_philiri_ks3_eosy(df, group_column):
     final_layout = [col for col in ideal_final_layout if col in grouped.columns]
     return grouped[final_layout]
 
+# --- RMA PROCESSORS ---
+def process_rma_ks1(df, group_column):
+    df.columns = df.columns.str.strip()
+    ideal_columns_to_sum = [
+        'Total Assessed', 'Total Emerging - Not Proficient', 'Total Emerging - Low Proficient', 'Total Developing - Nearly Proficient', 'Total Transitioning - Proficient', 'Total At Grade Level - Highly Proficient',
+        'G1 Assessed', 'G1 Emerging Not Proficient', 'G1 Emerging - Low Proficient', 'G1 Developing - Nearly Proficient', 'G1 Transitioning - Proficient', 'G1 At Grade Level - Highly Proficient',
+        'G2 Assessed', 'G2 Emerging Not Proficient', 'G2 Emerging - Low Proficient', 'G2 Developing - Nearly Proficient', 'G2 Transitioning - Proficient', 'G2 At Grade Level - Highly Proficient',
+        'G3 Assessed', 'G3 Emerging Not Proficient', 'G3 Emerging - Low Proficient', 'G3 Developing - Nearly Proficient', 'G3 Transitioning - Proficient', 'G3 At Grade Level - Highly Proficient'
+    ]
+    columns_to_sum = [col for col in ideal_columns_to_sum if col in df.columns]
+
+    for col in columns_to_sum:
+        clean_col = df[col].astype(str).str.replace(',', '', regex=False)
+        df[col] = pd.to_numeric(clean_col, errors='coerce').fillna(0)
+
+    grouped = df.groupby(group_column)[columns_to_sum].sum()
+    grouped['total_schools'] = df.groupby(group_column)['School ID'].nunique()
+    grouped.loc['Grand Total'] = grouped.sum()
+
+    grouped['% Total Emerging - Not Proficient'] = calculate_percentage(grouped, 'Total Emerging - Not Proficient', 'Total Assessed')
+    grouped['% Total Emerging - Low Proficient'] = calculate_percentage(grouped, 'Total Emerging - Low Proficient', 'Total Assessed')
+    grouped['% Total Developing - Nearly Proficient'] = calculate_percentage(grouped, 'Total Developing - Nearly Proficient', 'Total Assessed')
+    grouped['% Total Transitioning - Proficient'] = calculate_percentage(grouped, 'Total Transitioning - Proficient', 'Total Assessed')
+    grouped['% Total At Grade Level - Highly Proficient'] = calculate_percentage(grouped, 'Total At Grade Level - Highly Proficient', 'Total Assessed')
+
+    grouped['% G1 Emerging Not Proficient'] = calculate_percentage(grouped, 'G1 Emerging Not Proficient', 'G1 Assessed')
+    grouped['% G1 Emerging - Low Proficient'] = calculate_percentage(grouped, 'G1 Emerging - Low Proficient', 'G1 Assessed')
+    grouped['% G1 Developing - Nearly Proficient'] = calculate_percentage(grouped, 'G1 Developing - Nearly Proficient', 'G1 Assessed')
+    grouped['% G1 Transitioning - Proficient'] = calculate_percentage(grouped, 'G1 Transitioning - Proficient', 'G1 Assessed')
+    grouped['% G1 At Grade Level - Highly Proficient'] = calculate_percentage(grouped, 'G1 At Grade Level - Highly Proficient', 'G1 Assessed')
+
+    grouped['% G2 Emerging Not Proficient'] = calculate_percentage(grouped, 'G2 Emerging Not Proficient', 'G2 Assessed')
+    grouped['% G2 Emerging - Low Proficient'] = calculate_percentage(grouped, 'G2 Emerging - Low Proficient', 'G2 Assessed')
+    grouped['% G2 Developing - Nearly Proficient'] = calculate_percentage(grouped, 'G2 Developing - Nearly Proficient', 'G2 Assessed')
+    grouped['% G2 Transitioning - Proficient'] = calculate_percentage(grouped, 'G2 Transitioning - Proficient', 'G2 Assessed')
+    grouped['% G2 At Grade Level - Highly Proficient'] = calculate_percentage(grouped, 'G2 At Grade Level - Highly Proficient', 'G2 Assessed')
+
+    grouped['% G3 Emerging Not Proficient'] = calculate_percentage(grouped, 'G3 Emerging Not Proficient', 'G3 Assessed')
+    grouped['% G3 Emerging - Low Proficient'] = calculate_percentage(grouped, 'G3 Emerging - Low Proficient', 'G3 Assessed')
+    grouped['% G3 Developing - Nearly Proficient'] = calculate_percentage(grouped, 'G3 Developing - Nearly Proficient', 'G3 Assessed')
+    grouped['% G3 Transitioning - Proficient'] = calculate_percentage(grouped, 'G3 Transitioning - Proficient', 'G3 Assessed')
+    grouped['% G3 At Grade Level - Highly Proficient'] = calculate_percentage(grouped, 'G3 At Grade Level - Highly Proficient', 'G3 Assessed')
+
+    ideal_final_layout = [
+        'total_schools', 'Total Assessed', 
+        'Total Emerging - Not Proficient', '% Total Emerging - Not Proficient', 'Total Emerging - Low Proficient', '% Total Emerging - Low Proficient', 'Total Developing - Nearly Proficient', '% Total Developing - Nearly Proficient', 'Total Transitioning - Proficient', '% Total Transitioning - Proficient', 'Total At Grade Level - Highly Proficient', '% Total At Grade Level - Highly Proficient',
+        'G1 Assessed', 'G1 Emerging Not Proficient', '% G1 Emerging Not Proficient', 'G1 Emerging - Low Proficient', '% G1 Emerging - Low Proficient', 'G1 Developing - Nearly Proficient', '% G1 Developing - Nearly Proficient', 'G1 Transitioning - Proficient', '% G1 Transitioning - Proficient', 'G1 At Grade Level - Highly Proficient', '% G1 At Grade Level - Highly Proficient',
+        'G2 Assessed', 'G2 Emerging Not Proficient', '% G2 Emerging Not Proficient', 'G2 Emerging - Low Proficient', '% G2 Emerging - Low Proficient', 'G2 Developing - Nearly Proficient', '% G2 Developing - Nearly Proficient', 'G2 Transitioning - Proficient', '% G2 Transitioning - Proficient', 'G2 At Grade Level - Highly Proficient', '% G2 At Grade Level - Highly Proficient',
+        'G3 Assessed', 'G3 Emerging Not Proficient', '% G3 Emerging Not Proficient', 'G3 Emerging - Low Proficient', '% G3 Emerging - Low Proficient', 'G3 Developing - Nearly Proficient', '% G3 Developing - Nearly Proficient', 'G3 Transitioning - Proficient', '% G3 Transitioning - Proficient', 'G3 At Grade Level - Highly Proficient', '% G3 At Grade Level - Highly Proficient'
+    ]
+    final_layout = [col for col in ideal_final_layout if col in grouped.columns]
+    return grouped[final_layout]
+
+
+def process_rma_ks2(df, group_column):
+    df.columns = df.columns.str.strip()
+    ideal_columns_to_sum = [
+        'Total Assessed', 'Total Emerging - Not Proficient', 'Total Emerging - Low Proficient', 'Total Developing - Nearly Proficient', 'Total Transitioning - Proficient', 'Total At Grade Level - Highly Proficient',
+        'G4 Assessed', 'G4 Emerging Not Proficient', 'G4 Emerging - Low Proficient', 'G4 Developing - Nearly Proficient', 'G4 Transitioning - Proficient', 'G4 At Grade Level - Highly Proficient',
+        'G5 Assessed', 'G5 Emerging Not Proficient', 'G5 Emerging - Low Proficient', 'G5 Developing - Nearly Proficient', 'G5 Transitioning - Proficient', 'G5 At Grade Level - Highly Proficient',
+        'G6 Assessed', 'G6 Emerging Not Proficient', 'G6 Emerging - Low Proficient', 'G6 Developing - Nearly Proficient', 'G6 Transitioning - Proficient', 'G6 At Grade Level - Highly Proficient'
+    ]
+    columns_to_sum = [col for col in ideal_columns_to_sum if col in df.columns]
+
+    for col in columns_to_sum:
+        clean_col = df[col].astype(str).str.replace(',', '', regex=False)
+        df[col] = pd.to_numeric(clean_col, errors='coerce').fillna(0)
+
+    grouped = df.groupby(group_column)[columns_to_sum].sum()
+    grouped['total_schools'] = df.groupby(group_column)['School ID'].nunique()
+    grouped.loc['Grand Total'] = grouped.sum()
+
+    grouped['% Total Emerging - Not Proficient'] = calculate_percentage(grouped, 'Total Emerging - Not Proficient', 'Total Assessed')
+    grouped['% Total Emerging - Low Proficient'] = calculate_percentage(grouped, 'Total Emerging - Low Proficient', 'Total Assessed')
+    grouped['% Total Developing - Nearly Proficient'] = calculate_percentage(grouped, 'Total Developing - Nearly Proficient', 'Total Assessed')
+    grouped['% Total Transitioning - Proficient'] = calculate_percentage(grouped, 'Total Transitioning - Proficient', 'Total Assessed')
+    grouped['% Total At Grade Level - Highly Proficient'] = calculate_percentage(grouped, 'Total At Grade Level - Highly Proficient', 'Total Assessed')
+
+    grouped['% G4 Emerging Not Proficient'] = calculate_percentage(grouped, 'G4 Emerging Not Proficient', 'G4 Assessed')
+    grouped['% G4 Emerging - Low Proficient'] = calculate_percentage(grouped, 'G4 Emerging - Low Proficient', 'G4 Assessed')
+    grouped['% G4 Developing - Nearly Proficient'] = calculate_percentage(grouped, 'G4 Developing - Nearly Proficient', 'G4 Assessed')
+    grouped['% G4 Transitioning - Proficient'] = calculate_percentage(grouped, 'G4 Transitioning - Proficient', 'G4 Assessed')
+    grouped['% G4 At Grade Level - Highly Proficient'] = calculate_percentage(grouped, 'G4 At Grade Level - Highly Proficient', 'G4 Assessed')
+
+    grouped['% G5 Emerging Not Proficient'] = calculate_percentage(grouped, 'G5 Emerging Not Proficient', 'G5 Assessed')
+    grouped['% G5 Emerging - Low Proficient'] = calculate_percentage(grouped, 'G5 Emerging - Low Proficient', 'G5 Assessed')
+    grouped['% G5 Developing - Nearly Proficient'] = calculate_percentage(grouped, 'G5 Developing - Nearly Proficient', 'G5 Assessed')
+    grouped['% G5 Transitioning - Proficient'] = calculate_percentage(grouped, 'G5 Transitioning - Proficient', 'G5 Assessed')
+    grouped['% G5 At Grade Level - Highly Proficient'] = calculate_percentage(grouped, 'G5 At Grade Level - Highly Proficient', 'G5 Assessed')
+
+    grouped['% G6 Emerging Not Proficient'] = calculate_percentage(grouped, 'G6 Emerging Not Proficient', 'G6 Assessed')
+    grouped['% G6 Emerging - Low Proficient'] = calculate_percentage(grouped, 'G6 Emerging - Low Proficient', 'G6 Assessed')
+    grouped['% G6 Developing - Nearly Proficient'] = calculate_percentage(grouped, 'G6 Developing - Nearly Proficient', 'G6 Assessed')
+    grouped['% G6 Transitioning - Proficient'] = calculate_percentage(grouped, 'G6 Transitioning - Proficient', 'G6 Assessed')
+    grouped['% G6 At Grade Level - Highly Proficient'] = calculate_percentage(grouped, 'G6 At Grade Level - Highly Proficient', 'G6 Assessed')
+
+    ideal_final_layout = [
+        'total_schools', 'Total Assessed', 
+        'Total Emerging - Not Proficient', '% Total Emerging - Not Proficient', 'Total Emerging - Low Proficient', '% Total Emerging - Low Proficient', 'Total Developing - Nearly Proficient', '% Total Developing - Nearly Proficient', 'Total Transitioning - Proficient', '% Total Transitioning - Proficient', 'Total At Grade Level - Highly Proficient', '% Total At Grade Level - Highly Proficient',
+        'G4 Assessed', 'G4 Emerging Not Proficient', '% G4 Emerging Not Proficient', 'G4 Emerging - Low Proficient', '% G4 Emerging - Low Proficient', 'G4 Developing - Nearly Proficient', '% G4 Developing - Nearly Proficient', 'G4 Transitioning - Proficient', '% G4 Transitioning - Proficient', 'G4 At Grade Level - Highly Proficient', '% G4 At Grade Level - Highly Proficient',
+        'G5 Assessed', 'G5 Emerging Not Proficient', '% G5 Emerging Not Proficient', 'G5 Emerging - Low Proficient', '% G5 Emerging - Low Proficient', 'G5 Developing - Nearly Proficient', '% G5 Developing - Nearly Proficient', 'G5 Transitioning - Proficient', '% G5 Transitioning - Proficient', 'G5 At Grade Level - Highly Proficient', '% G5 At Grade Level - Highly Proficient',
+        'G6 Assessed', 'G6 Emerging Not Proficient', '% G6 Emerging Not Proficient', 'G6 Emerging - Low Proficient', '% G6 Emerging - Low Proficient', 'G6 Developing - Nearly Proficient', '% G6 Developing - Nearly Proficient', 'G6 Transitioning - Proficient', '% G6 Transitioning - Proficient', 'G6 At Grade Level - Highly Proficient', '% G6 At Grade Level - Highly Proficient'
+    ]
+    final_layout = [col for col in ideal_final_layout if col in grouped.columns]
+    return grouped[final_layout]
+
+
+def process_rma_ks3(df, group_column):
+    df.columns = df.columns.str.strip()
+    ideal_columns_to_sum = [
+        'Total Assessed', 'Total Emerging - Not Proficient', 'Total Emerging - Low Proficient', 'Total Developing - Nearly Proficient', 'Total Transitioning - Proficient', 'Total At Grade Level - Highly Proficient',
+        'G7 Assessed', 'G7 Emerging Not Proficient', 'G7 Emerging - Low Proficient', 'G7 Developing - Nearly Proficient', 'G7 Transitioning - Proficient', 'G7 At Grade Level - Highly Proficient',
+        'G8 Assessed', 'G8 Emerging Not Proficient', 'G8 Emerging - Low Proficient', 'G8 Developing - Nearly Proficient', 'G8 Transitioning - Proficient', 'G8 At Grade Level - Highly Proficient',
+        'G9 Assessed', 'G9 Emerging Not Proficient', 'G9 Emerging - Low Proficient', 'G9 Developing - Nearly Proficient', 'G9 Transitioning - Proficient', 'G9 At Grade Level - Highly Proficient',
+        'G10 Assessed', 'G10 Emerging Not Proficient', 'G10 Emerging - Low Proficient', 'G10 Developing - Nearly Proficient', 'G10 Transitioning - Proficient', 'G10 At Grade Level - Highly Proficient'
+    ]
+    columns_to_sum = [col for col in ideal_columns_to_sum if col in df.columns]
+
+    for col in columns_to_sum:
+        clean_col = df[col].astype(str).str.replace(',', '', regex=False)
+        df[col] = pd.to_numeric(clean_col, errors='coerce').fillna(0)
+
+    grouped = df.groupby(group_column)[columns_to_sum].sum()
+    grouped['total_schools'] = df.groupby(group_column)['School ID'].nunique()
+    grouped.loc['Grand Total'] = grouped.sum()
+
+    grouped['% Total Emerging - Not Proficient'] = calculate_percentage(grouped, 'Total Emerging - Not Proficient', 'Total Assessed')
+    grouped['% Total Emerging - Low Proficient'] = calculate_percentage(grouped, 'Total Emerging - Low Proficient', 'Total Assessed')
+    grouped['% Total Developing - Nearly Proficient'] = calculate_percentage(grouped, 'Total Developing - Nearly Proficient', 'Total Assessed')
+    grouped['% Total Transitioning - Proficient'] = calculate_percentage(grouped, 'Total Transitioning - Proficient', 'Total Assessed')
+    grouped['% Total At Grade Level - Highly Proficient'] = calculate_percentage(grouped, 'Total At Grade Level - Highly Proficient', 'Total Assessed')
+
+    grouped['% G7 Emerging Not Proficient'] = calculate_percentage(grouped, 'G7 Emerging Not Proficient', 'G7 Assessed')
+    grouped['% G7 Emerging - Low Proficient'] = calculate_percentage(grouped, 'G7 Emerging - Low Proficient', 'G7 Assessed')
+    grouped['% G7 Developing - Nearly Proficient'] = calculate_percentage(grouped, 'G7 Developing - Nearly Proficient', 'G7 Assessed')
+    grouped['% G7 Transitioning - Proficient'] = calculate_percentage(grouped, 'G7 Transitioning - Proficient', 'G7 Assessed')
+    grouped['% G7 At Grade Level - Highly Proficient'] = calculate_percentage(grouped, 'G7 At Grade Level - Highly Proficient', 'G7 Assessed')
+
+    grouped['% G8 Emerging Not Proficient'] = calculate_percentage(grouped, 'G8 Emerging Not Proficient', 'G8 Assessed')
+    grouped['% G8 Emerging - Low Proficient'] = calculate_percentage(grouped, 'G8 Emerging - Low Proficient', 'G8 Assessed')
+    grouped['% G8 Developing - Nearly Proficient'] = calculate_percentage(grouped, 'G8 Developing - Nearly Proficient', 'G8 Assessed')
+    grouped['% G8 Transitioning - Proficient'] = calculate_percentage(grouped, 'G8 Transitioning - Proficient', 'G8 Assessed')
+    grouped['% G8 At Grade Level - Highly Proficient'] = calculate_percentage(grouped, 'G8 At Grade Level - Highly Proficient', 'G8 Assessed')
+
+    grouped['% G9 Emerging Not Proficient'] = calculate_percentage(grouped, 'G9 Emerging Not Proficient', 'G9 Assessed')
+    grouped['% G9 Emerging - Low Proficient'] = calculate_percentage(grouped, 'G9 Emerging - Low Proficient', 'G9 Assessed')
+    grouped['% G9 Developing - Nearly Proficient'] = calculate_percentage(grouped, 'G9 Developing - Nearly Proficient', 'G9 Assessed')
+    grouped['% G9 Transitioning - Proficient'] = calculate_percentage(grouped, 'G9 Transitioning - Proficient', 'G9 Assessed')
+    grouped['% G9 At Grade Level - Highly Proficient'] = calculate_percentage(grouped, 'G9 At Grade Level - Highly Proficient', 'G9 Assessed')
+
+    grouped['% G10 Emerging Not Proficient'] = calculate_percentage(grouped, 'G10 Emerging Not Proficient', 'G10 Assessed')
+    grouped['% G10 Emerging - Low Proficient'] = calculate_percentage(grouped, 'G10 Emerging - Low Proficient', 'G10 Assessed')
+    grouped['% G10 Developing - Nearly Proficient'] = calculate_percentage(grouped, 'G10 Developing - Nearly Proficient', 'G10 Assessed')
+    grouped['% G10 Transitioning - Proficient'] = calculate_percentage(grouped, 'G10 Transitioning - Proficient', 'G10 Assessed')
+    grouped['% G10 At Grade Level - Highly Proficient'] = calculate_percentage(grouped, 'G10 At Grade Level - Highly Proficient', 'G10 Assessed')
+
+    ideal_final_layout = [
+        'total_schools', 'Total Assessed', 
+        'Total Emerging - Not Proficient', '% Total Emerging - Not Proficient', 'Total Emerging - Low Proficient', '% Total Emerging - Low Proficient', 'Total Developing - Nearly Proficient', '% Total Developing - Nearly Proficient', 'Total Transitioning - Proficient', '% Total Transitioning - Proficient', 'Total At Grade Level - Highly Proficient', '% Total At Grade Level - Highly Proficient',
+        'G7 Assessed', 'G7 Emerging Not Proficient', '% G7 Emerging Not Proficient', 'G7 Emerging - Low Proficient', '% G7 Emerging - Low Proficient', 'G7 Developing - Nearly Proficient', '% G7 Developing - Nearly Proficient', 'G7 Transitioning - Proficient', '% G7 Transitioning - Proficient', 'G7 At Grade Level - Highly Proficient', '% G7 At Grade Level - Highly Proficient',
+        'G8 Assessed', 'G8 Emerging Not Proficient', '% G8 Emerging Not Proficient', 'G8 Emerging - Low Proficient', '% G8 Emerging - Low Proficient', 'G8 Developing - Nearly Proficient', '% G8 Developing - Nearly Proficient', 'G8 Transitioning - Proficient', '% G8 Transitioning - Proficient', 'G8 At Grade Level - Highly Proficient', '% G8 At Grade Level - Highly Proficient',
+        'G9 Assessed', 'G9 Emerging Not Proficient', '% G9 Emerging Not Proficient', 'G9 Emerging - Low Proficient', '% G9 Emerging - Low Proficient', 'G9 Developing - Nearly Proficient', '% G9 Developing - Nearly Proficient', 'G9 Transitioning - Proficient', '% G9 Transitioning - Proficient', 'G9 At Grade Level - Highly Proficient', '% G9 At Grade Level - Highly Proficient',
+        'G10 Assessed', 'G10 Emerging Not Proficient', '% G10 Emerging Not Proficient', 'G10 Emerging - Low Proficient', '% G10 Emerging - Low Proficient', 'G10 Developing - Nearly Proficient', '% G10 Developing - Nearly Proficient', 'G10 Transitioning - Proficient', '% G10 Transitioning - Proficient', 'G10 At Grade Level - Highly Proficient', '% G10 At Grade Level - Highly Proficient'
+    ]
+    final_layout = [col for col in ideal_final_layout if col in grouped.columns]
+    return grouped[final_layout]
+
+
 # ==========================================
 # 3. INTERACTIVE WEB WORKFLOW
 # ==========================================
@@ -296,10 +466,17 @@ st.title("DepEd Automated Report Generator ARAL SY25-26")
 if 'uploader_key' not in st.session_state:
     st.session_state.uploader_key = str(0)
 
-# Interactive selections
+# Interactive selections replacing the command-line inputs
 assessment_choice = st.selectbox(
     "Which assessment are you processing?",
-    ("CRLA (Grades 1-3)", "Phil-IRI KS2 (Grades 4-6)", "Phil-IRI KS3 (Grades 7-10)")
+    (
+        "CRLA (Grades 1-3)", 
+        "Phil-IRI KS2 (Grades 4-6)", 
+        "Phil-IRI KS3 (Grades 7-10)",
+        "RMA KS1 (Grades 1-3)",
+        "RMA KS2 (Grades 4-6)",
+        "RMA KS3 (Grades 7-10)"
+    )
 )
 
 term_choice = st.radio("Which term are you processing?", ("BoSY", "EoSY"))
@@ -309,8 +486,14 @@ if assessment_choice == "CRLA (Grades 1-3)":
     assessment_name = "CRLA"
 elif assessment_choice == "Phil-IRI KS2 (Grades 4-6)":
     assessment_name = "PhilIRI_KS2"
-else:
+elif assessment_choice == "Phil-IRI KS3 (Grades 7-10)":
     assessment_name = "PhilIRI_KS3"
+elif assessment_choice == "RMA KS1 (Grades 1-3)":
+    assessment_name = "RMA_KS1"
+elif assessment_choice == "RMA KS2 (Grades 4-6)":
+    assessment_name = "RMA_KS2"
+elif assessment_choice == "RMA KS3 (Grades 7-10)":
+    assessment_name = "RMA_KS3"
 
 report_prefix = f"{assessment_name}_{term_choice}"
 
@@ -318,16 +501,27 @@ report_prefix = f"{assessment_name}_{term_choice}"
 st.info(f"💡 **Reminder:** Please make sure the CSV you upload exactly matches your selection above (**{assessment_choice} - {term_choice}**) to prevent processing errors.")
 # -----------------------------
 
-# Web File Uploader tied to our session state key
+# Web File Uploader dynamically updates its label
 uploaded_file = st.file_uploader(f"Upload your {report_prefix} CSV", type=["csv"], key=st.session_state.uploader_key)
 
 if uploaded_file is not None:
     try:
-        # TWEAK 1: This creates a spinning wheel that automatically disappears when the code finishes!
-        with st.spinner("Processing data... Please wait."):
+        with st.spinner("Cleaning dirty data, formatting numbers, and processing... Please wait."):
             
-            # Read the data
-            raw_data = pd.read_csv(uploaded_file)
+            # Read the data - Added low_memory=False to prevent mixed-type warnings
+            raw_data = pd.read_csv(uploaded_file, low_memory=False)
+            
+            # ==========================================
+            # AUTOMATED DATA CLEANING
+            # ==========================================
+            # Keep these specific columns as text
+            text_columns = ['Region', 'Division', 'District', 'Municipality', 'School ID', 'School Name']
+            
+            # Force all other columns to be numeric globally.
+            for col in raw_data.columns:
+                if col not in text_columns:
+                    raw_data[col] = pd.to_numeric(raw_data[col], errors='coerce').fillna(0)
+            # ==========================================
             
             # Route the data to the correct processor based on user choices
             if assessment_name == 'CRLA':
@@ -349,13 +543,23 @@ if uploaded_file is not None:
                 elif term_choice == 'EoSY':
                     summary_table_region = process_philiri_ks3_eosy(raw_data, 'Region')
                     summary_table_division = process_philiri_ks3_eosy(raw_data, 'Division')
-            
+                    
+            elif assessment_name == 'RMA_KS1':
+                summary_table_region = process_rma_ks1(raw_data, 'Region')
+                summary_table_division = process_rma_ks1(raw_data, 'Division')
+                
+            elif assessment_name == 'RMA_KS2':
+                summary_table_region = process_rma_ks2(raw_data, 'Region')
+                summary_table_division = process_rma_ks2(raw_data, 'Division')
+                
+            elif assessment_name == 'RMA_KS3':
+                summary_table_region = process_rma_ks3(raw_data, 'Region')
+                summary_table_division = process_rma_ks3(raw_data, 'Division')
+        
         st.success("Success! Your reports have been created.")
 
-        # TWEAK 3: The Reset Button
-        # If clicked, it changes the memory key, which forces the uploader to go blank and start over.
+        # The Centered Reset Button
         spacer_left, center_col, spacer_right = st.columns([1, 2, 1])
-        
         with center_col:
             if st.button("🔄 Reset / Start Over", use_container_width=True):
                 st.session_state.uploader_key = str(int(st.session_state.uploader_key) + 1)
@@ -367,7 +571,6 @@ if uploaded_file is not None:
 
         # Centered download buttons
         spacer1, col1, col2, spacer2 = st.columns([1, 2, 2, 1])
-        
         with col1:
             st.download_button(
                 label="Download Region-Pivot CSV",
@@ -376,7 +579,6 @@ if uploaded_file is not None:
                 mime='text/csv',
                 use_container_width=True
             )
-            
         with col2:
             st.download_button(
                 label="Download Division-Pivot CSV",
@@ -396,7 +598,9 @@ if uploaded_file is not None:
         st.error(f"Data Processing Error: {e}")
         st.write("Please check your CSV file to ensure it matches the chosen assessment format.")
         
-        # Give them a reset button here too, just in case they trigger an error!
-        if st.button("🔄 Try Again"):
-            st.session_state.uploader_key = str(int(st.session_state.uploader_key) + 1)
-            st.rerun()
+        # Centered Try Again Button
+        err_spacer_left, err_center_col, err_spacer_right = st.columns([1, 2, 1])
+        with err_center_col:
+            if st.button("🔄 Try Again", use_container_width=True):
+                st.session_state.uploader_key = str(int(st.session_state.uploader_key) + 1)
+                st.rerun()
